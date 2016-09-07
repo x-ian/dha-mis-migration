@@ -9,7 +9,7 @@ var config = {
   server: 'localhost',
   //server: 'IE11WIN7\\SQLEXPRESS',
   // If you are on Microsoft Azure, you need this:
-  options: {encrypt: false, database: 'hivdata2', requestTimeout: 0 /*120000*/}
+  options: {encrypt: false, database: 'HIVData', requestTimeout: 0 /*120000*/}
 };
 var connection = new Connection(config);
 connection.on('connect', function(err) {
@@ -30,7 +30,7 @@ var TYPES = require('tedious').TYPES;
 
 function dumpTable(table) {
   var wstream = fs.createWriteStream('c:\\Users\\IEUser\\Desktop\\' + table + '.csv');
-  query = "SELECT * FROM " + table;
+  query = "SELECT * FROM " + table + " ORDER BY ID";
   // query = ""SELECT c.CustomerID, c.CompanyName,COUNT(soh.SalesOrderID) AS OrderCount FROM SalesLT.Customer AS c LEFT OUTER JOIN SalesLT.SalesOrderHeader AS soh ON c.CustomerID = soh.CustomerID GROUP BY c.CustomerID, c.CompanyName ORDER BY OrderCount DESC;"
   var start = moment();
   request = new Request(query, function(err, rowCount) {
@@ -54,8 +54,8 @@ function dumpTable(table) {
         if (column.colName === 'SSMA_TimeStamp') {
           // do nothing
         } else {
-          // header += "\"" + column.colName + " (" + column.type.name + ")\",";
-          header += "\"" + column.colName + "\",";
+          header += "\"" + column.colName + " (" + column.type.name + ")\",";
+          //header += "\"" + column.colName + "\",";
         }
       });
       wstream.write(header.substring(0, header.length - 1) + '\r\n');
@@ -78,6 +78,26 @@ function dumpTable(table) {
             // result += moment(column.value).format('M/D/YYYY H:mm:SS') + ",";
             result += moment.utc(column.value).format('M/D/YYYY H:mm:ss') + ",";
             //result += column.value + ',';
+          } else if (type === 'BitN') {
+			  if (column.value == true) {
+				  result += "1,";
+			  } else if (column.value == false) {
+				  result += "0,";
+			  } else {
+				  result += ",";
+			  }
+		  } else if (type === 'Real') {
+			  if (("" + column.value).indexOf("." == -1)) {
+				  result += column.value + '.00,';
+			  } else {
+				  result += column.value + ',';
+			  }
+		  } else if (type === 'FloatN') {
+			  if (("" + column.value).indexOf("." == -1)) {
+				  result += column.value + '.00,';
+			  } else {
+				  result += column.value + ',';
+			  }
           } else {
             result+= column.value + ",";
           }
@@ -93,3 +113,7 @@ function dumpTable(table) {
     connection.execSql(request);
 
   }
+
+  function endsWith(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+}
