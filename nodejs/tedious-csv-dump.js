@@ -2,6 +2,8 @@ var Connection = require('tedious').Connection;
 var fs = require('fs');
 var moment = require('moment');
 var async = require('async');
+var roundTo = require('round-to');
+var numeral = require('numeral');
 
 var config = {
   userName: 'root',
@@ -30,7 +32,22 @@ var TYPES = require('tedious').TYPES;
 
 function dumpTable(table) {
   var wstream = fs.createWriteStream('c:\\Users\\IEUser\\Desktop\\' + table + '.csv');
-  query = "SELECT * FROM " + table + " ORDER BY ID";
+ 
+	if (table === 'code_hfacility_GPS' 
+	|| table === 'map_supply_item_cms_code'
+	|| table === 'map_user'
+	|| table === 'NMCP_DL20_export'
+	|| table === 'NMCP_DL21_export'
+	|| table === 'NMCP_DL26_export'
+	|| table === 'NMCP_DL30_export'
+	|| table === 'population'
+	|| table === 'pop_sex_district_hiv') {
+ query = "SELECT * FROM " + table;
+ 		
+	} else {
+ query = "SELECT * FROM " + table + " ORDER BY ID";
+ 		
+	}
   // query = ""SELECT c.CustomerID, c.CompanyName,COUNT(soh.SalesOrderID) AS OrderCount FROM SalesLT.Customer AS c LEFT OUTER JOIN SalesLT.SalesOrderHeader AS soh ON c.CustomerID = soh.CustomerID GROUP BY c.CustomerID, c.CompanyName ORDER BY OrderCount DESC;"
   var start = moment();
   request = new Request(query, function(err, rowCount) {
@@ -54,8 +71,8 @@ function dumpTable(table) {
         if (column.colName === 'SSMA_TimeStamp') {
           // do nothing
         } else {
-          header += "\"" + column.colName + " (" + column.type.name + ")\",";
-          //header += "\"" + column.colName + "\",";
+          //header += "\"" + column.colName + " (" + column.type.name + ")\",";
+          header += "\"" + column.colName + "\",";
         }
       });
       wstream.write(header.substring(0, header.length - 1) + '\r\n');
@@ -86,18 +103,51 @@ function dumpTable(table) {
 			  } else {
 				  result += ",";
 			  }
+		  } else if (type === 'Money') {
+			  result += "$" + numeral(column.value).format('0.00') + ",";
 		  } else if (type === 'Real') {
+			  //result += formatDecimal(column.value) + ',';
+			  /*
+			  if (column.value < 0) {
+				result += numeral(roundTo.up(column.value, 2)).format('0.00') + ",";
+			} else {
+				result += numeral(roundTo.down(column.value, 2)).format('0.00') + ",";
+			  }
+			  */
+			  
+			  var temp = "";
+			  temp = numeral(column.value).format('0.00000');
+			  result += temp.substring(0, temp.length - 3) + ",";
+			  
+			  /*
 			  if (("" + column.value).indexOf("." == -1)) {
 				  result += column.value + '.00,';
 			  } else {
 				  result += column.value + ',';
-			  }
+			  }*/
+			  //result+= column.value + ",";
 		  } else if (type === 'FloatN') {
+			  //result += formatDecimal(column.value) + ',';
+			  //result+= column.value + ",";
+			  /*
+			  if (column.value < 0) {
+				result += numeral(roundTo.up(column.value, 2)).format('0.00') + ",";
+			} else {
+				result += numeral(roundTo.down(column.value, 2)).format('0.00') + ",";
+			  }
+			  */
+			  
+			  var temp = "";
+			  temp = numeral(column.value).format('0.00000');
+			  result += temp.substring(0, temp.length - 3) + ",";
+			  
+			  /*
 			  if (("" + column.value).indexOf("." == -1)) {
 				  result += column.value + '.00,';
 			  } else {
 				  result += column.value + ',';
 			  }
+			  */
           } else {
             result+= column.value + ",";
           }
@@ -113,6 +163,22 @@ function dumpTable(table) {
     connection.execSql(request);
 
   }
+
+    function formatDecimal(value) {
+	  		  var indexOf = ("" + value).indexOf('.');
+			  if (indexOf === -1) {
+				  // no decimal at all
+				  return "" + value + ".00";
+			  } else if ((indexOf - 1) === ("" + value).length) {
+				  // only one digit after point
+				  return "" + value + "0";
+			  } else {
+				  // 
+				  return ("" + value).substring(0, indexOf + 3);
+			  }
+
+  }
+
 
   function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
