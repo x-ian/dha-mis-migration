@@ -9,7 +9,7 @@ var config = {
   server: 'localhost',
   //server: 'IE11WIN7\\SQLEXPRESS',
   // If you are on Microsoft Azure, you need this:
-  options: {encrypt: false, database: 'HIVData', requestTimeout: 0 /*120000*/}
+  options: {encrypt: false, database: 'HIVData2', requestTimeout: 0 /*120000*/}
 };
 var connection = new Connection(config);
 connection.on('connect', function(err) {

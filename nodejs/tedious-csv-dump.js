@@ -11,7 +11,7 @@ var config = {
   server: 'localhost',
   //server: 'IE11WIN7\\SQLEXPRESS',
   // If you are on Microsoft Azure, you need this:
-  options: {encrypt: false, database: 'HIVData', requestTimeout: 0 /*120000*/}
+  options: {encrypt: false, database: 'HIVData2', requestTimeout: 0 /*120000*/}
 };
 var connection = new Connection(config);
 connection.on('connect', function(err) {
@@ -31,7 +31,7 @@ var Request = require('tedious').Request;
 var TYPES = require('tedious').TYPES;
 
 function dumpTable(table) {
-  var wstream = fs.createWriteStream('c:\\Users\\IEUser\\Desktop\\' + table + '.csv');
+  var wstream = fs.createWriteStream('c:\\Users\\IEUser\\Desktop\\csv-export-sql\\' + table + '.csv');
  
 	if (table === 'code_hfacility_GPS' 
 	|| table === 'map_supply_item_cms_code'
@@ -68,7 +68,8 @@ function dumpTable(table) {
     request.on('columnMetadata', function (columns) {
       var header = "";
       columns.forEach(function(column) {
-        if (column.colName === 'SSMA_TimeStamp') {
+        if (column.colName === 'SSMA_TimeStamp'
+			|| column.colName === 'my_timestamp') {
           // do nothing
         } else {
           //header += "\"" + column.colName + " (" + column.type.name + ")\",";
@@ -83,7 +84,8 @@ function dumpTable(table) {
       var result = "";
       //console.log(columns);
       columns.forEach(function(column) {
-        if (column.metadata.colName === 'SSMA_TimeStamp') {
+        if (column.metadata.colName === 'SSMA_TimeStamp'
+			|| column.metadata.colName === 'my_timestamp') {
           // do nothing
         } else if (column.value === null) {
           result += ",";

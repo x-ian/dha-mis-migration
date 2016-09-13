@@ -1,4 +1,4 @@
-Attribute VB_Name = "Module2"
+Attribute VB_Name = "CsvExportTableDefinition"
 Option Compare Database
 
 ' stolen/adapted from
