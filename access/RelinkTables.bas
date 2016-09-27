@@ -61,18 +61,19 @@ Sub RelinkAllTables()
     Col.Add "supply_item"
     Col.Add "supply_item_set"
     Col.Add "tblOrgUnit"
-    
+
     Dim name As Variant
 
     On Error Resume Next
 
     For Each name In Col
-        Test = CurrentDb.TableDefs(name).name
+        Available = CurrentDb.TableDefs(name).name
         If Err <> 3265 Then
             Call DeleteTable(CStr(name))
         End If
-        Call AttachDSNLessTable(CStr(name), "dbo." & CStr(name), "IE11WIN7\SQLEXPRESS", "HIVData2")
+        Call AttachDSNLessTable(CStr(name), "dbo." & CStr(name), "IE11WIN7\SQLEXPRESS", "HIVData")
     Next
+    
 End Sub
 
 '//Name     :   AttachDSNLessTable
@@ -84,7 +85,6 @@ End Sub
 '//     stDatabase: Name of the SQL Server database that you are linking to
 '//     stUsername: Name of the SQL Server user who can connect to SQL Server, leave blank to use a Trusted Connection
 '//     stPassword: SQL Server user password
-' from https://support.microsoft.com/en-us/kb/892490
 Function AttachDSNLessTable(stLocalTableName As String, stRemoteTableName As String, stServer As String, stDatabase As String, Optional stUsername As String, Optional stPassword As String)
     On Error GoTo AttachDSNLessTable_Err
     Dim td As TableDef
@@ -107,7 +107,7 @@ Function AttachDSNLessTable(stLocalTableName As String, stRemoteTableName As Str
     End If
     Set td = CurrentDb.CreateTableDef(stLocalTableName, dbAttachSavePWD, stRemoteTableName, stConnect)
     CurrentDb.TableDefs.Append td
-    Debug.Print "added"
+    Debug.Print "added " & stRemoteTableName
     AttachDSNLessTable = True
     Exit Function
 
@@ -133,8 +133,9 @@ Sub DeleteTable(name As String)
          '**********
          ' Now, we're ready to delete the table.
          '**********
-         Debug.Print tName & " will be deleted"
          'docmd.SetWarnings False
          DoCmd.DeleteObject acTable, name
+         Debug.Print name & " deleted"
          'docmd.SetWarnings True
 End Sub
+
