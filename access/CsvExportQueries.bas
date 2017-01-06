@@ -1,86 +1,6 @@
 Option Compare Database
 
-Public Sub printAllParams()
-
-    Dim obj As AccessObject
-    Dim qdf As DAO.QueryDef
-    Dim params As Boolean
-    
-    Dim t As String
-    
-    params = False
-    
-    Debug.Print "start"
-    
-    For Each obj In Application.CurrentData.AllQueries
-        Set qdf = CurrentDb.QueryDefs(obj.name)
-        
-        'If qdf.name = "psm_regim_consum_growth" Then GoTo END_FOR_2
-        On Error Resume Next
-        
-        t = qdf.name & ","
-        If originalQueryExists(qdf.name) Then 'qdf.Type = dbQSelect Then
-            For Each p In qdf.Parameters
-                t = t + p.name & "," 'Debug.Print p.name
-                params = True
-                If p.name <> "[Enter quarter]" And p.name <> "[Enter year]" And p.name <> "[Enter distribution round]" Then
-                'Debug.Print p.name
-                End If
-            Next p
-         '   If hasParams(qdf) And InStr(1, qdf.sql, "PARAMETERS") = 1 Then
-          '       Debug.Print qdf.name & "," & Left(qdf.sql, InStr(qdf.sql, ";"))
-           ' End If
-           If params Then
-            Debug.Print t
-            End If
-            params = False
-        End If
-    Next obj
-End Sub
-
-Public Function hasParams(qdf)
-    On Error Resume Next
-    For Each p In qdf.Parameters
-        If Err.Number <> 0 Then
-            Debug.Print "error looking into query : parameter " & qdf.name & " : " & p.name & " Errnumber : " & Err.Number
-            Err.Clear
-        End If
-        hasParams = True
-        Exit Function
-    Next p
-    hasParams = False
-End Function
-
-Public Function originalQueryExists(name)
-    On Error Resume Next
-    Set qdf = CurrentDb.QueryDefs(name & "_original")
-    If Err.Number <> 0 Then
-        Err.Clear
-        originalQueryExists = False
-        Exit Function
-    End If
-    originalQueryExists = True
-End Function
-
-Public Sub restoreQueriesWithParams()
-
-    Dim obj As AccessObject
-    Dim qdf As DAO.QueryDef
-
-    Dim t As String
-    
-    For Each obj In Application.CurrentData.AllQueries
-        If originalQueryExists(obj.name) Then
-            Set qdf = CurrentDb.QueryDefs(obj.name)
-            Debug.Print "restore original query and delete param-less query " & obj.name
-            DoCmd.DeleteObject acQuery, obj.name
-            DoCmd.Rename obj.name, acQuery, obj.name & "_original"
-        End If
-    Next obj
-    
-End Sub
-
-Public Sub hardcodeParamsIntoQueries()
+Public Sub main_1a_hardcodeParamsIntoQueries()
 
     Dim obj As AccessObject
     Dim qdf As DAO.QueryDef
@@ -151,7 +71,18 @@ Public Sub hardcodeParamsIntoQueries()
                     sql = Replace(sql, "Forms!psm_site_stock_consumpt_getval!year_quarter_id_getval", "26")
                     sql = Replace(sql, "Forms!psm_dist_round!ref_year_quarter_id", "65")
                     sql = Replace(sql, "[Forms].[psm_dist_round].[ref_year_quarter_id]", "65")
- '                   sql = Replace(sql, "", "")
+                    sql = Replace(sql, "Forms!psm_relocate_sheet!psm_relocate_ID_select", "1004")
+                    sql = Replace(sql, "[Forms]![psm_ro_sheet]![RO_item_set]", "1")
+                    sql = Replace(sql, "Forms!supply_item_set!supply_group_select", "34")
+                    sql = Replace(sql, "[Forms]![supply_item_set].[supply_group_select]", "34")
+                    sql = Replace(sql, "Forms!supply_item_set.version_set_select", "194")
+                
+                    sql = Replace(sql, "forms!art_clinic_obs_v8.ID", "18100")
+                    sql = Replace(sql, "Forms!art_clinic_obs_v8_startup!art_clinic_obs_id_select", "18100")
+                    sql = Replace(sql, "Forms!art_clinic_obs_v8_startup!hdepartment_ID_select", "804")
+                    sql = Replace(sql, "Forms!art_clinic_obs_v8!obs_dim_set!obs_set!obs_dimensions_ID_parent", "1")
+                    sql = Replace(sql, "Forms!art_clinic_obs_v8!obs_dim_set!obs_dimensions_id_parent", "1")
+                    'sql = Replace(sql, "", "")
                     
                     ' whitelisting known ok queries
         '            If qdf.name = "art_obs_clinic_odo" _
@@ -194,7 +125,7 @@ END_FOR_2:
     
 End Sub
 
-Public Sub checkAndRestoreOriginalParamQueryNowWithoutParams()
+Public Sub main_1b_checkAndRestoreOriginalParamQueryNowWithoutParams()
 
     ' now scan again all converted queries for nested queries and parameters
     For Each obj In Application.CurrentData.AllQueries
@@ -203,12 +134,12 @@ Public Sub checkAndRestoreOriginalParamQueryNowWithoutParams()
         ' check for every _original query if it still requires a parameter
         If InStr(1, qdf.name, "_original") > 0 Then 'And originalQueryExists(qdf.name) Then
         If qdf.name = "art_death_now_prev_neg_original" Then
-        Debug.Print qdf.name
-        Debug.Print ""
+            Debug.Print qdf.name
+            Debug.Print ""
         End If
             If hasParams(qdf) Then
                 ' all good, still requires parameter, keep it like that
-                'Debug.Print qdf.name & " still requires params"
+                Debug.Print qdf.name & " still requires params"
             Else
                 ' looks like now the orginal query doesnt need a parameter anymore
                 ' assuming that only a nested query had params and restoring original query as it is
@@ -217,19 +148,29 @@ Public Sub checkAndRestoreOriginalParamQueryNowWithoutParams()
                 DoCmd.Rename Left(qdf.name, InStr(qdf.name, "_original") - 1), acQuery, obj.name
             End If
         End If
-    
-    
     Next obj
 
 End Sub
- 
-Function DirExists(DirName As String) As Boolean
-    On Error GoTo ErrorHandler
-    DirExists = GetAttr(DirName) And vbDirectory
-ErrorHandler:
-End Function
 
-Public Sub CsvExportQueries()
+Public Sub main_2_restoreQueriesWithParams()
+
+    Dim obj As AccessObject
+    Dim qdf As DAO.QueryDef
+
+    Dim t As String
+    
+    For Each obj In Application.CurrentData.AllQueries
+        If originalQueryExists(obj.name) Then
+            Set qdf = CurrentDb.QueryDefs(obj.name)
+            Debug.Print "restore original query and delete param-less query " & obj.name
+            DoCmd.DeleteObject acQuery, obj.name
+            DoCmd.Rename obj.name, acQuery, obj.name & "_original"
+        End If
+    Next obj
+    
+End Sub
+
+Public Sub main_3_CsvExportQueries()
     Dim obj As AccessObject, dbs As Object
     Set dbs = Application.CurrentData
  
@@ -237,7 +178,7 @@ Public Sub CsvExportQueries()
     Dim dir As String
     Dim strFile As String
    ' strFile = "C:\Users\IEUser\Desktop\export\File.txt"
-    dir = CurrentProject.path & "\export"
+    dir = CurrentProject.Path & "\export"
     If Not DirExists(dir) Then
         MkDir (dir)
     End If
@@ -263,7 +204,7 @@ Public Sub CsvExportQueries()
         Dim params As Boolean
         params = False
         
-        For Each p In qdf.Parameters
+        For Each P In qdf.Parameters
             If Err.Number <> 0 Then
                 Print #intFile, ";yy;Error occured;" & obj.name & ";" & queryDefType(qdf.Type)
                 Err.Clear
@@ -271,7 +212,7 @@ Public Sub CsvExportQueries()
             End If
             'Debug.Print p.Name & " " & p.Value
             params = True
-        Next p
+        Next P
             
         If Not params Then
  '          If qdf.Type <> dbQDelete And qdf.Type <> dbQAction And qdf.Type <> dbQAppend And qdf.Type <> dbQUpdate Then ' Or qdf.Type = 128 Or qdf.Type = 16 Then
@@ -323,7 +264,75 @@ END_FOR_REAL:
     Close #intFile
 End Sub
 
-Function queryDefType(typ As Integer) As String
+Public Sub main_4_printAllParams()
+
+    Dim obj As AccessObject
+    Dim qdf As DAO.QueryDef
+    Dim params As Boolean
+    
+    Dim t As String
+    
+    params = False
+    
+    Debug.Print "start"
+    
+    For Each obj In Application.CurrentData.AllQueries
+        Set qdf = CurrentDb.QueryDefs(obj.name)
+        
+        'If qdf.name = "psm_regim_consum_growth" Then GoTo END_FOR_2
+        On Error Resume Next
+        
+        t = qdf.name & ","
+        If originalQueryExists(qdf.name) Then 'qdf.Type = dbQSelect Then
+            For Each P In qdf.Parameters
+                t = t + P.name & "," 'Debug.Print p.name
+                params = True
+                If P.name <> "[Enter quarter]" And P.name <> "[Enter year]" And P.name <> "[Enter distribution round]" Then
+                'Debug.Print p.name
+                End If
+            Next P
+         '   If hasParams(qdf) And InStr(1, qdf.sql, "PARAMETERS") = 1 Then
+          '       Debug.Print qdf.name & "," & Left(qdf.sql, InStr(qdf.sql, ";"))
+           ' End If
+           If params Then
+            Debug.Print t
+            End If
+            params = False
+        End If
+    Next obj
+End Sub
+
+Private Function hasParams(qdf)
+    On Error Resume Next
+    For Each P In qdf.Parameters
+        If Err.Number <> 0 Then
+            Debug.Print "error looking into query : parameter " & qdf.name & " : " & P.name & " Errnumber : " & Err.Number
+            Err.Clear
+        End If
+        hasParams = True
+        Exit Function
+    Next P
+    hasParams = False
+End Function
+
+Private Function originalQueryExists(name)
+    On Error Resume Next
+    Set qdf = CurrentDb.QueryDefs(name & "_original")
+    If Err.Number <> 0 Then
+        Err.Clear
+        originalQueryExists = False
+        Exit Function
+    End If
+    originalQueryExists = True
+End Function
+ 
+Private Function DirExists(DirName As String) As Boolean
+    On Error GoTo ErrorHandler
+    DirExists = GetAttr(DirName) And vbDirectory
+ErrorHandler:
+End Function
+
+Private Function queryDefType(typ As Integer) As String
 
 ' https://msdn.microsoft.com/en-us/library/office/ff192931.aspx
 
@@ -362,4 +371,5 @@ End Select
 queryDefType = s
 
 End Function
+
 

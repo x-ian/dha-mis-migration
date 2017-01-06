@@ -138,10 +138,11 @@ Dim Cancel As Integer
             !art_clinic_obs_id = ArtClinicObsId
             !period_report = PeriodReport
             !sub_group = SubGroup
-            ObsDimensionsID = !ID
             !User = CurrentUser()
             !TimeStamp = Now()
             .Update
+            .Bookmark = RstObsDim.LastModified
+            ObsDimensionsID = !ID
         Else
             ObsDimensionsID = ![ID]
         End If
