@@ -18,7 +18,6 @@ Sub main_RelinkAllTables()
     Col.Add "art_supervisor"
     Col.Add "code_hdepartment"
     Col.Add "code_hfacility"
-    'Col.Add "code_hfacility_GPS"
     Col.Add "code_year_quarter"
     Col.Add "concept"
     Col.Add "concept_set"
@@ -33,12 +32,7 @@ Sub main_RelinkAllTables()
     Col.Add "map_regimen_supply"
     Col.Add "map_regimen_supply_rule"
     Col.Add "map_scm_site"
-    'Col.Add "map_supply_item_cms_code"
     Col.Add "map_user"
-    'Col.Add "NMCP_DL20_export"
-    'Col.Add "NMCP_DL21_export"
-    'Col.Add "NMCP_DL26_export"
-    'Col.Add "NMCP_DL30_export"
     Col.Add "obs"
     Col.Add "obs_dimensions"
     Col.Add "population"
@@ -55,23 +49,31 @@ Sub main_RelinkAllTables()
     Col.Add "psm_relocate_old"
     Col.Add "psm_ro_item"
     Col.Add "psm_ro_sheet"
-    'Col.Add "psm_ro_site"
     Col.Add "psm_stock_report"
     Col.Add "supply_item"
     Col.Add "supply_item_set"
     Col.Add "tblOrgUnit"
 
     Dim name As Variant
+    Dim localName As String
 
     On Error Resume Next
 
     For Each name In Col
-        Available = CurrentDb.TableDefs(name).name
-        If Err <> 3265 Then
-            Call DeleteTable(CStr(name))
+        localName = CStr(name)
+        If name = "concept" Then
+            localName = "concept_live"
         End If
-        'Call AttachDSNLessTable(CStr(name), "dbo." & CStr(name), "IE11WIN7\SQLEXPRESS", "HIVData7")
-        Call AttachDSNLessTable(CStr(name), "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData8", "sa", "dhamis@2016")
+        If name = "concept_set" Then
+            localName = "concept_set_live"
+        End If
+        
+        Available = CurrentDb.TableDefs(localName).name
+        If Err <> 3265 Then
+            Call DeleteTable(localName)
+        End If
+        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "IE11WIN7\SQLEXPRESS", "HIVData9")
+'        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
     Next
     
 End Sub
@@ -138,5 +140,3 @@ Sub DeleteTable(name As String)
          Debug.Print name & " deleted"
          'docmd.SetWarnings True
 End Sub
-
-

@@ -19,6 +19,12 @@ Sub GenerateProfilerCodeForAllModules()
     Next objComponent
 End Sub
  
+' Get rid of Profiler code, use search and replace (for Module or Whole Project)
+' replace>	Dim mProfiler As New ProfiledMethod< with empty line (Find Whole Words Only, Match Case)
+' replace>	mProfiler.ProfiledMethod = BLOCK_MARKER_PROC_NAME< with empty line (Find Whole Words Only, Match Case)
+' replace>	Const BLOCK_MARKER_PROC_NAME = "*"< with empty line (Find Whole Words Only, Match Case, With pattern matching)
+
+
 ' InsertProcedureNameIntoProcedure will insert a CONST statement at the top of each
 ' procedure in the Application.VBE.ActiveCodePane.CodeModule, like
 '    Const C_PROC_NAME_illegal = "callit"
