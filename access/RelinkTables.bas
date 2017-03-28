@@ -1,6 +1,6 @@
 Option Compare Database
 
-Sub main_RelinkAllTables()
+Sub main_RelinkAllTables(server As String, db As String, Optional stUsername As String, Optional stPassword As String)
     Dim Col As Collection
     Set Col = New Collection
     Col.Add "art_accom"
@@ -72,11 +72,17 @@ Sub main_RelinkAllTables()
         If Err <> 3265 Then
             Call DeleteTable(localName)
         End If
-        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "IE11WIN7\SQLEXPRESS", "HIVData9")
+        Call AttachDSNLessTable(localName, "dbo." & CStr(name), server, db, stUsername, stPassword)
 '        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
     Next
     
 End Sub
+
+Sub main_RelinkAllTablesHardCoded()
+    'main_RelinkAllTables "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
+    main_RelinkAllTables "IE11WIN7\SQLEXPRESS", "HIVData3"
+End Sub
+
 
 '//Name     :   AttachDSNLessTable
 '//Purpose  :   Create a linked table to SQL Server without using a DSN
@@ -140,3 +146,4 @@ Sub DeleteTable(name As String)
          Debug.Print name & " deleted"
          'docmd.SetWarnings True
 End Sub
+
