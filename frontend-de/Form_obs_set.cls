@@ -130,7 +130,7 @@ Dim Cancel As Integer
     
 'Find obs_dimensions_ID matching current parameters, otherwise insert rec in obs_dimensions table
 
-    Set RstObsDim = CurrentDb.OpenRecordset("select id from obs_dimensions where art_clinic_obs_id = " & ArtClinicObsId & " and period_report = " & PeriodReport & " and sub_group = " & SubGroup & ";", dbOpenDynaset, dbSeeChanges)
+    Set RstObsDim = CurrentDb.OpenRecordset("select * from obs_dimensions where art_clinic_obs_id = " & ArtClinicObsId & " and period_report = " & PeriodReport & " and sub_group = " & SubGroup & ";", dbOpenDynaset, dbSeeChanges)
     With RstObsDim
 '        .Seek "=", ArtClinicObsId, PeriodReport, SubGroup
         If .EOF Then

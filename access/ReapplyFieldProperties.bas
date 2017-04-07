@@ -1,27 +1,10 @@
 Option Compare Database
 
-Function isOdbcLinkedTable(table As String) As Boolean
-    Dim td As TableDef
-    Dim db As Database
-        
-    Set db = CurrentDb
-    Set td = db.TableDefs(table)
-    
-'    isOdbcLinkedTable = startsWith(td.Connect, "ODBC;")
-    isOdbcLinkedTable = startsWith(td.Connect, ";DATABASE")
-End Function
-
-Public Function startsWith(str As String, prefix As String) As Boolean
-    startsWith = Left(str, Len(prefix)) = prefix
-End Function
-
 Sub main_print_frontend_field_properties()
 
     Dim td As TableDef
     Dim fd As field
     Dim p As property
-    
-    'Dim tbl As DAO.TableDef
 
     For Each td In CurrentDb.TableDefs
         If isOdbcLinkedTable(td.name) Then
@@ -65,133 +48,113 @@ Sub main_load_frontend_field_properties()
     Dim value As String
     Dim typ As String
     
-    Set rs = CurrentDb.OpenRecordset("field_properties")
+    Set rs = CurrentDb.OpenRecordset("field_properties", dbOpenDynaset, dbSeeChanges)
     'populate the table
     rs.MoveLast
     rs.MoveFirst
 
     Do While Not rs.EOF
-        Debug.Print rs!ID
         table = rs!table
         field = rs!field
-        typ = getTypeForProperty("Caption")
-            If Not IsNull(rs!Caption) Then
-                Call applyProperty(table, field, "Caption", rs!Caption, getTypeForProperty("Caption"))
-            End If
-            If Not IsNull(rs!DecimalPlace) Then
-            End If
-            If Not IsNull(rs!Format) Then
-            End If
-            If Not IsNull(rs!IMESentenceMode) Then
-            End If
-            If Not IsNull(rs!ShowDatePicker) Then
-            End If
-            If Not IsNull(rs!TextAlign) Then
-            End If
-            If Not IsNull(rs!TextFormat) Then
-            End If
-            If Not IsNull(rs!DisplayControl) Then
-            End If
-            If Not IsNull(rs!RowSourceType) Then
-            End If
-            If Not IsNull(rs!RowSource) Then
-            End If
-            If Not IsNull(rs!BoundColumn) Then
-            End If
-            If Not IsNull(rs!ColumnCount) Then
-            End If
-            If Not IsNull(rs!ColumnHeads) Then
-            End If
-            If Not IsNull(rs!ColumnWidths) Then
-            End If
-            If Not IsNull(rs!ListRows) Then
-            End If
-            If Not IsNull(rs!ListWidth) Then
-            End If
-            If Not IsNull(rs!LimitToList) Then
-            End If
-            If Not IsNull(rs!AllowMultipleValues) Then
-            End If
-            If Not IsNull(rs!AllowValueListEdits) Then
-            End If
-            If Not IsNull(rs!ListItemEditForm) Then
-            End If
-            If Not IsNull(rs!ShowOnlyRowSource) Then
-            End If
-        typ = getTypeForProperty(rs!Type)
-        Call applyProperty(table, field, property, value, typ)
+        Call loadProperty(table, field, rs!Caption)
+        Call loadProperty(table, field, rs!DecimalPlace)
+        Call loadProperty(table, field, rs!Format)
+        Call loadProperty(table, field, rs!IMESentenceMode)
+        Call loadProperty(table, field, rs!ShowDatePicker)
+        Call loadProperty(table, field, rs!TextAlign)
+        Call loadProperty(table, field, rs!TextFormat)
+        Call loadProperty(table, field, rs!DisplayControl)
+        Call loadProperty(table, field, rs!RowSourceType)
+        Call loadProperty(table, field, rs!RowSource)
+        Call loadProperty(table, field, rs!BoundColumn)
+        Call loadProperty(table, field, rs!ColumnCount)
+        Call loadProperty(table, field, rs!ColumnHeads)
+        Call loadProperty(table, field, rs!ColumnWidths)
+        Call loadProperty(table, field, rs!ListRows)
+        Call loadProperty(table, field, rs!ListWidth)
+        Call loadProperty(table, field, rs!LimitToList)
+        Call loadProperty(table, field, rs!AllowMultipleValues)
+        Call loadProperty(table, field, rs!AllowValueListEdits)
+        Call loadProperty(table, field, rs!ListItemEditForm)
+        Call loadProperty(table, field, rs!ShowOnlyRowSource)
         rs.MoveNext
     Loop
 End Sub
 
-Sub applyProperty(table As String, field As String, py As String, value As String, typ As String)
+Private Sub loadProperty(table As String, field As String, property As field)
+    If Not IsNull(property) Then
+        Call applyProperty(table, field, property.name, property.value, getTypeForProperty(property.name))
+    End If
+End Sub
+
+Private Sub applyProperty(table As String, field As String, py As String, value As String, typ As String)
 
     Dim db As Database
-    Dim f As Dao.field
-    Dim p As Dao.property
+    Dim f As DAO.field
+    Dim p As DAO.property
     
     Set db = CurrentDb
     Set f = db.TableDefs(table).Fields(field)
     
-    'On Error Resume Next
+    On Error Resume Next ' intentionally ignore errors to simply code when property doesn't exist
     Set p = f.Properties(py)
     f.Properties.Delete py
     On Error GoTo 0
     
     Set p = f.CreateProperty(py, typ, value)
     f.Properties.Append p
-    
+
 End Sub
 
-Function getTypeForProperty(property As String)
+Private Function getTypeForProperty(property As String)
     Dim typ As String
-        Select Case property
-            Case "Caption"
-                typ = "12"
-            Case "DecimalPlace"
-                typ = "2"
-            Case "Format"
-                typ = "10"
-            Case "IMESentenceMode"
-                typ = "2"
-            Case "ShowDatePicker"
-                typ = "3"
-            Case "TextAlign"
-                typ = "2"
-            Case "TextFormat"
-                typ = "2"
-            Case "DisplayControl"
-                typ = "3"
-            Case "RowSourceType"
-                typ = "10"
-            Case "RowSource"
-                typ = "12"
-            Case "BoundColumn"
-                typ = "3"
-            Case "ColumnCount"
-                typ = "3"
-            Case "ColumnHeads"
-                typ = "1"
-            Case "ColumnWidths"
-                typ = "3"
-            Case "ListRows"
-                typ = "3"
-            Case "ListWidth"
-                typ = "10"
-            Case "LimitToList"
-                typ = "1"
-            Case "AllowMultipleValues"
-                typ = "1"
-            Case "AllowValueListEdits"
-                typ = "1"
-            Case "ListItemEditForm"
-                typ = "12"
-            Case "ShowOnlyRowSource"
-                typ = "1"
-            Case Else
-                typ = "UNKNOWN"
-                Debug.Print "Unknown property " & property
-        End Select
+    Select Case property
+        Case "Caption"
+            typ = "12"
+        Case "DecimalPlace"
+            typ = "2"
+        Case "Format"
+            typ = "10"
+        Case "IMESentenceMode"
+            typ = "2"
+        Case "ShowDatePicker"
+            typ = "3"
+        Case "TextAlign"
+            typ = "2"
+        Case "TextFormat"
+            typ = "2"
+        Case "DisplayControl"
+            typ = "3"
+        Case "RowSourceType"
+            typ = "10"
+        Case "RowSource"
+            typ = "12"
+        Case "BoundColumn"
+            typ = "3"
+        Case "ColumnCount"
+            typ = "3"
+        Case "ColumnHeads"
+            typ = "1"
+        Case "ColumnWidths"
+            typ = "10"
+        Case "ListRows"
+            typ = "3"
+        Case "ListWidth"
+            typ = "10"
+        Case "LimitToList"
+            typ = "1"
+        Case "AllowMultipleValues"
+            typ = "1"
+        Case "AllowValueListEdits"
+            typ = "1"
+        Case "ListItemEditForm"
+            typ = "12"
+        Case "ShowOnlyRowSource"
+            typ = "1"
+        Case Else
+            typ = "UNKNOWN"
+            Debug.Print "Unknown property " & property
+    End Select
     getTypeForProperty = typ
 End Function
 
@@ -251,7 +214,20 @@ Private Sub createOrUpdateProperty(table As String, field As String, property As
 
 End Sub
 
+Private Function isOdbcLinkedTable(table As String) As Boolean
+    Dim td As TableDef
+    Dim db As Database
+        
+    Set db = CurrentDb
+    Set td = db.TableDefs(table)
+    
+    isOdbcLinkedTable = startsWith(td.Connect, "ODBC;")
+'    isOdbcLinkedTable = startsWith(td.Connect, ";DATABASE") ' for Access-to-Access Linked Tables
+End Function
 
+Private Function startsWith(str As String, prefix As String) As Boolean
+    startsWith = Left(str, Len(prefix)) = prefix
+End Function
 
 
 

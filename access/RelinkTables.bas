@@ -21,6 +21,7 @@ Sub main_RelinkAllTables(server As String, db As String, Optional stUsername As 
     Col.Add "code_year_quarter"
     Col.Add "concept"
     Col.Add "concept_set"
+    Col.Add "field_properties"
     Col.Add "htc_obs"
     Col.Add "htc_obs_dimensions"
     Col.Add "htc_person"
@@ -76,6 +77,8 @@ Sub main_RelinkAllTables(server As String, db As String, Optional stUsername As 
 '        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
     Next
     
+    Call changeOdbcSourceForSqlPassthroughQueries(server, db, stUsername, stPassword)
+    
 End Sub
 
 Sub main_RelinkAllTablesHardCoded()
@@ -104,15 +107,8 @@ Function AttachDSNLessTable(stLocalTableName As String, stRemoteTableName As Str
         End If
     Next
       
-'ODBC;DRIVER=ODBC Driver 11 for SQL Server;SERVER=IE11WIN7\SQLEXPRESS;Trusted_Connection=Yes;APP=Microsoft® Windows® Operating System;DATABASE=HIVData2;;TABLE=dbo.art_accom
-
-    If Len(stUsername) = 0 Then
-        '//Use trusted authentication if stUsername is not supplied.
-        stConnect = "ODBC;DRIVER=ODBC Driver 11 for SQL Server;SERVER=" & stServer & ";Trusted_Connection=Yes;APP=Microsoft® Windows® Operating System;DATABASE=" & stDatabase & ";;"
-    Else
-        '//WARNING: This will save the username and the password with the linked table information.
-        stConnect = "ODBC;DRIVER=ODBC Driver 11 for SQL Server;SERVER=" & stServer & ";DATABASE=" & stDatabase & ";UID=" & stUsername & ";PWD=" & stPassword
-    End If
+      
+    stConnect = createOdbcConnectString(stServer, stDatabase, stUsername, stPassword)
     Set td = CurrentDb.CreateTableDef(stLocalTableName, dbAttachSavePWD, stRemoteTableName, stConnect)
     CurrentDb.TableDefs.Append td
     Debug.Print "added " & stRemoteTableName
@@ -125,6 +121,23 @@ AttachDSNLessTable_Err:
     MsgBox "AttachDSNLessTable encountered an unexpected error: " & Err.Description
 
 End Function
+
+Private Sub changeOdbcSourceForSqlPassthroughQueries(server As String, db As String, Optional stUsername As String, Optional stPassword As String)
+
+    Dim obj As AccessObject
+    Dim qdf As DAO.QueryDef
+    Dim odbc As String
+    
+    odbc = createOdbcConnectString(server, db, stUsername, stPassword)
+    
+    For Each obj In Application.CurrentData.AllQueries
+        Set qdf = CurrentDb.QueryDefs(obj.name)
+        If queryDefType(qdf.Type) = "dbQSQLPassThrough" Then
+            qdf.Connect = odbc
+        End If
+    Next obj
+    
+End Sub
 
 Sub DeleteTable(name As String)
          '**********
@@ -146,4 +159,57 @@ Sub DeleteTable(name As String)
          Debug.Print name & " deleted"
          'docmd.SetWarnings True
 End Sub
+
+Private Function createOdbcConnectString(stServer As String, stDatabase As String, Optional stUsername As String, Optional stPassword As String)
+'ODBC;DRIVER=ODBC Driver 11 for SQL Server;SERVER=IE11WIN7\SQLEXPRESS;Trusted_Connection=Yes;APP=Microsoft® Windows® Operating System;DATABASE=HIVData2;;TABLE=dbo.art_accom
+
+    If Len(stUsername) = 0 Then
+        '//Use trusted authentication if stUsername is not supplied.
+        createOdbcConnectString = "ODBC;DRIVER=ODBC Driver 11 for SQL Server;SERVER=" & stServer & ";Trusted_Connection=Yes;APP=Microsoft® Windows® Operating System;DATABASE=" & stDatabase & ";;"
+    Else
+        '//WARNING: This will save the username and the password with the linked table information.
+        createOdbcConnectString = "ODBC;DRIVER=ODBC Driver 11 for SQL Server;SERVER=" & stServer & ";DATABASE=" & stDatabase & ";UID=" & stUsername & ";PWD=" & stPassword
+    End If
+End Function
+
+Private Function queryDefType(typ As Integer) As String
+
+' https://msdn.microsoft.com/en-us/library/office/ff192931.aspx
+
+s = ""
+Select Case typ
+    Case 240
+        s = "dbQAction"
+    Case 64
+        s = "dbQAppend"
+    Case 160
+        s = "dbQCompound"
+    Case 16
+        s = "dbQCrosstab"
+    Case 96
+        s = "dbQDDL"
+    Case 32
+        s = "dbQDelete"
+    Case 80
+        s = "dbQMakeTable"
+    Case 224
+        s = "dbQProcedure"
+    Case 0
+        s = "dbQSelect"
+    Case 128
+        s = "dbQSetOperation"
+    Case 144
+        s = "dbQSPTBulk"
+    Case 112
+        s = "dbQSQLPassThrough"
+    Case 48
+        s = "dbQUdate"
+    Case Else
+        s = "Unknown type " & qdf.Type
+End Select
+
+queryDefType = s
+
+End Function
+
 

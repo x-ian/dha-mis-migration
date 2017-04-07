@@ -17,7 +17,7 @@ Sub main_MigrateCodeForActiveCodePane()
     migrateCode Application.VBE.ActiveCodePane.CodeModule
 End Sub
 
-' requires reference to Microsoft Visual Basic for Application Extensibility
+' requires reference to Microsoft Visual Basic for Application Extensibility (under Tools - References)
 Private Sub migrateCode(CodeMod As VBIDE.CodeModule)
     
     ' DATA ENTRY DB

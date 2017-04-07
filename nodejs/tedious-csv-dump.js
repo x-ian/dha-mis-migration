@@ -5,13 +5,14 @@ var async = require('async');
 var roundTo = require('round-to');
 var numeral = require('numeral');
 
+// port dynamic might need to be configured, check http://stackoverflow.com/questions/32315817/cannot-connect-to-sql-server-with-node-js-and-tedious
 var config = {
-  userName: 'root',
-  password: 'root',
-  server: 'localhost',
+  userName: 'xian',
+  password: 'xian',
+  server: '172.22.30.70',
   //server: 'IE11WIN7\\SQLEXPRESS',
   // If you are on Microsoft Azure, you need this:
-  options: {encrypt: false, database: 'HIVData2', requestTimeout: 0 /*120000*/}
+  options: {port: 49380, encrypt: false, database: 'HIVData3_restart', requestTimeout: 0 /*120000*/}
 };
 var connection = new Connection(config);
 connection.on('connect', function(err) {
@@ -94,6 +95,14 @@ function dumpTable(table) {
           if (type === 'NVarChar') {
             result+= "\"" + column.value.replace(/"/g, '""') + "\",";
           } else if (type === 'DateTime2N') {
+            // result += moment(column.value).format('M/D/YYYY H:mm:SS') + ",";
+            result += moment.utc(column.value).format('M/D/YYYY H:mm:ss') + ",";
+            //result += column.value + ',';
+          } else if (type === 'DateTime') {
+            // result += moment(column.value).format('M/D/YYYY H:mm:SS') + ",";
+            result += moment.utc(column.value).format('M/D/YYYY H:mm:ss') + ",";
+            //result += column.value + ',';
+          } else if (type === 'DateTimeN') {
             // result += moment(column.value).format('M/D/YYYY H:mm:SS') + ",";
             result += moment.utc(column.value).format('M/D/YYYY H:mm:ss') + ",";
             //result += column.value + ',';
@@ -184,4 +193,4 @@ function dumpTable(table) {
 
   function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
-}
+  }
