@@ -16,7 +16,7 @@ Dim dbs As Database
 Dim DbsLink1, DbsLink2 As DAO.Database
 Dim t As TableDef
 Dim DbPath1, DbPath2, SourceTable1, SourceTable2, TableName
-Dim RstObsDim, RstObs As DAO.Recordset
+Dim RstObsDim, RstObs, RstObsDimLastModified As DAO.Recordset
 Dim RstObsDimFrm, RstObsFrm, RstChkSum As Recordset
 Dim ArtClinicObsId, PeriodReport, SubGroup, ObsDimensionsID As Long
 Dim Cancel As Integer
@@ -141,8 +141,11 @@ Dim Cancel As Integer
             !User = CurrentUser()
             !TimeStamp = Now()
             .Update
-            .Bookmark = RstObsDim.LastModified
-            ObsDimensionsID = !ID
+            Set RstObsDimLastModified = CurrentDb.OpenRecordset("select ID from obs_dimensions where art_clinic_obs_id = " & ArtClinicObsId & " and period_report = " & PeriodReport & " and sub_group = " & SubGroup & ";", dbOpenDynaset, dbSeeChanges)
+            RstObsDimLastModified.MoveFirst
+            ObsDimensionsID = RstObsDimLastModified!ID
+'            .Bookmark = RstObsDim.LastModified
+'            ObsDimensionsID = !ID
         Else
             ObsDimensionsID = ![ID]
         End If

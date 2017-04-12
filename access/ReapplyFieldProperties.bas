@@ -1,4 +1,5 @@
 Option Compare Database
+Option Explicit
 
 Sub main_print_frontend_field_properties()
 
@@ -41,43 +42,43 @@ End Sub
 
 Sub main_load_frontend_field_properties()
 
-    Dim rs As Recordset
+    Dim Rs As Recordset
     Dim table As String
     Dim field As String
     Dim property As String
     Dim value As String
     Dim typ As String
     
-    Set rs = CurrentDb.OpenRecordset("field_properties", dbOpenDynaset, dbSeeChanges)
+    Set Rs = CurrentDb.OpenRecordset("field_properties", dbOpenDynaset, dbSeeChanges)
     'populate the table
-    rs.MoveLast
-    rs.MoveFirst
+    Rs.MoveLast
+    Rs.MoveFirst
 
-    Do While Not rs.EOF
-        table = rs!table
-        field = rs!field
-        Call loadProperty(table, field, rs!Caption)
-        Call loadProperty(table, field, rs!DecimalPlace)
-        Call loadProperty(table, field, rs!Format)
-        Call loadProperty(table, field, rs!IMESentenceMode)
-        Call loadProperty(table, field, rs!ShowDatePicker)
-        Call loadProperty(table, field, rs!TextAlign)
-        Call loadProperty(table, field, rs!TextFormat)
-        Call loadProperty(table, field, rs!DisplayControl)
-        Call loadProperty(table, field, rs!RowSourceType)
-        Call loadProperty(table, field, rs!RowSource)
-        Call loadProperty(table, field, rs!BoundColumn)
-        Call loadProperty(table, field, rs!ColumnCount)
-        Call loadProperty(table, field, rs!ColumnHeads)
-        Call loadProperty(table, field, rs!ColumnWidths)
-        Call loadProperty(table, field, rs!ListRows)
-        Call loadProperty(table, field, rs!ListWidth)
-        Call loadProperty(table, field, rs!LimitToList)
-        Call loadProperty(table, field, rs!AllowMultipleValues)
-        Call loadProperty(table, field, rs!AllowValueListEdits)
-        Call loadProperty(table, field, rs!ListItemEditForm)
-        Call loadProperty(table, field, rs!ShowOnlyRowSource)
-        rs.MoveNext
+    Do While Not Rs.EOF
+        table = Rs!table
+        field = Rs!field
+        Call loadProperty(table, field, Rs!Caption)
+        Call loadProperty(table, field, Rs!DecimalPlace)
+        Call loadProperty(table, field, Rs!Format)
+        Call loadProperty(table, field, Rs!IMESentenceMode)
+        Call loadProperty(table, field, Rs!ShowDatePicker)
+        Call loadProperty(table, field, Rs!TextAlign)
+        Call loadProperty(table, field, Rs!TextFormat)
+        Call loadProperty(table, field, Rs!DisplayControl)
+        Call loadProperty(table, field, Rs!RowSourceType)
+        Call loadProperty(table, field, Rs!RowSource)
+        Call loadProperty(table, field, Rs!BoundColumn)
+        Call loadProperty(table, field, Rs!ColumnCount)
+        Call loadProperty(table, field, Rs!ColumnHeads)
+        Call loadProperty(table, field, Rs!ColumnWidths)
+        Call loadProperty(table, field, Rs!ListRows)
+        Call loadProperty(table, field, Rs!ListWidth)
+        Call loadProperty(table, field, Rs!LimitToList)
+        Call loadProperty(table, field, Rs!AllowMultipleValues)
+        Call loadProperty(table, field, Rs!AllowValueListEdits)
+        Call loadProperty(table, field, Rs!ListItemEditForm)
+        Call loadProperty(table, field, Rs!ShowOnlyRowSource)
+        Rs.MoveNext
     Loop
 End Sub
 
@@ -89,12 +90,13 @@ End Sub
 
 Private Sub applyProperty(table As String, field As String, py As String, value As String, typ As String)
 
-    Dim db As Database
+    Dim Db As Database
     Dim f As DAO.field
     Dim p As DAO.property
     
-    Set db = CurrentDb
-    Set f = db.TableDefs(table).Fields(field)
+    Set Db = CurrentDb
+    'if field = "concept"
+    Set f = Db.TableDefs(table).Fields(field)
     
     On Error Resume Next ' intentionally ignore errors to simply code when property doesn't exist
     Set p = f.Properties(py)
@@ -192,14 +194,14 @@ End Sub
 Private Sub createOrUpdateProperty(table As String, field As String, property As String, value As String)
 
     Dim sql As String
-    Dim rs As Recordset
+    Dim Rs As Recordset
     Dim v2 As String
     
     v2 = Replace(value, """", """""")
     'On Error Resume Next
     ' find existing record and update
-    Set rs = CurrentDb.OpenRecordset("SELECT * FROM field_properties where [table] = """ & table & """ AND field = """ & field & """", dbOpenDynaset, dbSeeChanges)
-    If rs.EOF Then
+    Set Rs = CurrentDb.OpenRecordset("SELECT * FROM field_properties where [table] = """ & table & """ AND field = """ & field & """", dbOpenDynaset, dbSeeChanges)
+    If Rs.EOF Then
         ' create a new one
         sql = "INSERT INTO field_properties ([Table], Field, " & property & ") VALUES (""" & table & """, """ & field & """, """ & v2 & """);"
         
@@ -216,10 +218,10 @@ End Sub
 
 Private Function isOdbcLinkedTable(table As String) As Boolean
     Dim td As TableDef
-    Dim db As Database
+    Dim Db As Database
         
-    Set db = CurrentDb
-    Set td = db.TableDefs(table)
+    Set Db = CurrentDb
+    Set td = Db.TableDefs(table)
     
     isOdbcLinkedTable = startsWith(td.Connect, "ODBC;")
 '    isOdbcLinkedTable = startsWith(td.Connect, ";DATABASE") ' for Access-to-Access Linked Tables

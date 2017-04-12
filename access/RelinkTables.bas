@@ -1,6 +1,28 @@
 Option Compare Database
+Option Explicit
 
-Sub main_RelinkAllTables(server As String, db As String, Optional stUsername As String, Optional stPassword As String)
+Public DbUser As String
+Public DbServer As String
+Public DbInstance As String
+Public DbTrustedConnection As String
+
+Public Function CurrentUser()
+    CurrentUser = DbUser
+End Function
+
+Public Function CurrentServer()
+    CurrentServer = DbServer
+End Function
+
+Public Function CurrentDbInstance()
+    CurrentDbInstance = DbInstance
+End Function
+
+Public Function CurrentDbTrustedConnection()
+    CurrentDbTrustedConnection = DbTrustedConnection
+End Function
+
+Sub main_RelinkAllTables(Server As String, Db As String, Optional stUsername As String, Optional stPassword As String)
     Dim Col As Collection
     Set Col = New Collection
     Col.Add "art_accom"
@@ -56,29 +78,87 @@ Sub main_RelinkAllTables(server As String, db As String, Optional stUsername As 
     Col.Add "tblOrgUnit"
 
     Dim name As Variant
+    Dim available As Variant
     Dim localName As String
-
+    Dim Db2 As Database
+    Dim td As TableDef
+    Set Db2 = CurrentDb
     On Error Resume Next
 
     For Each name In Col
         localName = CStr(name)
         If name = "concept" Then
-            localName = "concept_live"
+            Set td = Db2.TableDefs(localName)
+            If IsObject(td) Then
+                ' need to break it into 2 conditions as access stupidily evaluates always both expressions, even if the first one is already false
+                If td.Connect = "" Then
+                    ' this is already a local table, not a linked one
+                    ' dataentry frontend: make sure that local concept table remains
+                    ' and MSSQL concept table is linked as concept_live
+                    localName = "concept_live"
+                End If
+            End If
         End If
         If name = "concept_set" Then
-            localName = "concept_set_live"
+            Set td = Db2.TableDefs(localName)
+            If IsObject(td) Then
+                ' need to break it into 2 conditions as access stupidily evaluates always both expressions, even if the first one is already false
+                If td.Connect = "" Then
+                    ' this is already a local table, not a linked one
+                    ' dataentry frontend: make sure that local concept_set table remains
+                    ' and MSSQL concept_set table is linked as concept_set_live
+                    localName = "concept_set_live"
+                End If
+            End If
         End If
         
-        Available = CurrentDb.TableDefs(localName).name
+        available = CurrentDb.TableDefs(localName).name
         If Err <> 3265 Then
             Call DeleteTable(localName)
         End If
-        Call AttachDSNLessTable(localName, "dbo." & CStr(name), server, db, stUsername, stPassword)
+        If Not AttachDSNLessTable(localName, "dbo." & CStr(name), Server, Db, stUsername, stPassword) Then
 '        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
+            MsgBox ("Error during (re-) linking. Wrong login details? Frontend not usuable; aborting")
+            GoTo error
+        End If
     Next
     
-    Call changeOdbcSourceForSqlPassthroughQueries(server, db, stUsername, stPassword)
+    Call changeOdbcSourceForSqlPassthroughQueries(Server, Db, stUsername, stPassword)
     
+    Call updateConnectionDetails
+    Call main_load_frontend_field_properties
+    
+    Exit Sub
+error:
+    
+End Sub
+
+Public Sub updateConnectionDetails()
+    Dim qdf As QueryDef
+    Dim Db As Database
+    Dim Rs As Recordset
+    
+    Set Db = CurrentDb
+    Set qdf = CurrentDb.QueryDefs("current_user")
+    Set Rs = qdf.OpenRecordset(dbOpenDynaset, dbSeeChanges)
+    Rs.MoveFirst
+    DbUser = Rs!Expr1000
+
+    Dim start, ende
+    start = InStr(qdf.Connect, "SERVER=")
+    ende = InStr(start + 7, qdf.Connect, ";")
+    DbServer = Mid(qdf.Connect, start + 7, ende - (start + 7))
+    
+    start = InStr(qdf.Connect, "DATABASE=")
+    ende = InStr(start + 9, qdf.Connect, ";")
+    DbInstance = Mid(qdf.Connect, start + 9, ende - (start + 9))
+    
+    start = InStr(qdf.Connect, "Trusted_Connection=Yes")
+    If start > 0 Then
+        DbTrustedConnection = "AD Login"
+    Else
+        DbTrustedConnection = ""
+    End If
 End Sub
 
 Sub main_RelinkAllTablesHardCoded()
@@ -122,13 +202,13 @@ AttachDSNLessTable_Err:
 
 End Function
 
-Private Sub changeOdbcSourceForSqlPassthroughQueries(server As String, db As String, Optional stUsername As String, Optional stPassword As String)
+Private Sub changeOdbcSourceForSqlPassthroughQueries(Server As String, Db As String, Optional stUsername As String, Optional stPassword As String)
 
     Dim obj As AccessObject
     Dim qdf As DAO.QueryDef
     Dim odbc As String
     
-    odbc = createOdbcConnectString(server, db, stUsername, stPassword)
+    odbc = createOdbcConnectString(Server, Db, stUsername, stPassword)
     
     For Each obj In Application.CurrentData.AllQueries
         Set qdf = CurrentDb.QueryDefs(obj.name)
@@ -140,13 +220,15 @@ Private Sub changeOdbcSourceForSqlPassthroughQueries(server As String, db As Str
 End Sub
 
 Sub DeleteTable(name As String)
+    Dim rel As Relation
+    
          '**********
          ' Since the delete action will fail if the
          ' table is participating in any relation, first
          ' find and delete existing relations for table.
          '**********
          For Each rel In CurrentDb.Relations
-            If rel.Table = name Or rel.ForeignTable = name Then
+            If rel.table = name Or rel.ForeignTable = name Then
                Debug.Print name & " | " & rel.name
                CurrentDb.Relations.Delete rel.name
             End If
@@ -175,6 +257,7 @@ End Function
 Private Function queryDefType(typ As Integer) As String
 
 ' https://msdn.microsoft.com/en-us/library/office/ff192931.aspx
+Dim s As String
 
 s = ""
 Select Case typ
@@ -205,11 +288,12 @@ Select Case typ
     Case 48
         s = "dbQUdate"
     Case Else
-        s = "Unknown type " & qdf.Type
+        s = "Unknown type " & typ
 End Select
 
 queryDefType = s
 
 End Function
+
 
 
