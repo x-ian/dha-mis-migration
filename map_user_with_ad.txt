@@ -1,0 +1,56 @@
+"admin","Administrator","Administrator",,
+"alichi","Alinafe","Chingwalu",,"mohhiv\achingwalu        "
+"alikan","Alinafe","Kan",,
+"andjah","Andreas","Jahn",,"mohhiv\ajahn             "
+"andmga","Andrew","Mganga",,"mohhiv\amganga           "
+"asiali","Asif","Ali",,
+"ausmnt","Austin","Mnthambala",,"mohhiv\amthambala        "
+"bazchi","Bazaliel","Chimosola",,
+"bensam",,,,
+"bernku","Bernadette","Nkunika",,
+"bersam",,,,
+"carnta","Caroline","Ntale",,"mohhiv\cantale           "
+"chimka","Chimwemwe","Mkandawire",,"mohhiv\cmkandawire       "
+"chinkh",,,,
+"chrneu","Christian","Neumann",,"mohhiv\cneumann          "
+"conmuy","Conrad","Muyepa",,
+"Creato",,,,
+"denkac","Dennis","Kacheche",,"mohhiv\dkacheche         "
+"diamat",,,,
+"dorchi","Dorica","Chirwa",,"mohhiv\dchirwa           "
+"elimah","Elisa","Ngulu",,
+"elskas","Elsie","Kasambwe",,"mohhiv\kasambwe          "
+"Engine",,,,
+"erisch","Erik","Schouten",,
+"eusmha","Eustice","Mhango",,"mohhiv\emhango           "
+"felpha","Felics","Phambala",,"mohhiv\fphambala         "
+"frachi","Frank","Chimbwandira",,"mohhiv\fchimbwandila     "
+"gerkau","Gerald","Kausiwa",,
+"gerzom","Gerald","Zomba",,"mohhiv\gzomba            "
+"innkam","Innocent","Kamchikwe",,
+"jammwa",,,,
+"johchi","John","Chipeta",,"mohhiv\jchipeta          "
+"jonnya","Jonas","Nyasulu",,
+"josnja","Joseph","Njala",,
+"konnam",,,,
+"lamman","Lameck","Manda",,"mohhiv\lmanda            "
+"lysten","Lyson","Tenthani",,
+"matkad","Matthews","Kadewa",,"mohhiv\mkadewa           "
+"melnkh","Melenia","Nkhoma",,"mohhiv\mnkhoma           "
+"memdzo","Memory","Dzonzi",,
+"mikbut","Mike","Butao",,
+"mphmtu","Mphatso","Mtulusa",,"mohhiv\mmtulutsa         "
+"mtenya","Mtemwa","Nyangulu",,
+"mwamak",,,,
+"nelkab",,,,
+"paxmku","Pax","Mkupani",,"mohhiv\pmkupani          "
+"rabban","Rabecca","Banda",,
+"relman","Relia","Nkhata",,
+"roykao",,,,
+"salsha",,,,
+"simmak","Simon","Makombe",,"mohhiv\smakombe          "
+"tadchi","Tadala","Chilunjika",,"mohhiv\tchilunjika       "
+"tiskac","Tisungeni","Kachere",,"mohhiv\tkachere          "
+"wildzo","William","Dzonzi",,"mohhiv\wdzonzi           "
+"xian","Christian","Neumann",,"xian                     "
+"zenchi","Zengani","Chirwa",,"mohhiv\zchirwa           "

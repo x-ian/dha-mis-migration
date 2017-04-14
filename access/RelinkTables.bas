@@ -1,13 +1,22 @@
 Option Compare Database
 Option Explicit
 
+Public DhaUser As String
 Public DbUser As String
 Public DbServer As String
 Public DbInstance As String
 Public DbTrustedConnection As String
 
+Public Function runningOnAccessRuntime() As Boolean
+    runningOnAccessRuntime = SysCmd(acSysCmdRuntime)
+End Function
+
 Public Function CurrentUser()
-    CurrentUser = DbUser
+    CurrentUser = DhaUser
+End Function
+
+Public Function CurrentDbUser()
+    CurrentDbUser = DbUser
 End Function
 
 Public Function CurrentServer()
@@ -119,7 +128,7 @@ Sub main_RelinkAllTables(Server As String, Db As String, Optional stUsername As 
         If Not AttachDSNLessTable(localName, "dbo." & CStr(name), Server, Db, stUsername, stPassword) Then
 '        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
             MsgBox ("Error during (re-) linking. Wrong login details? Frontend not usuable; aborting")
-            GoTo error
+            GoTo ERROR
         End If
     Next
     
@@ -129,14 +138,28 @@ Sub main_RelinkAllTables(Server As String, Db As String, Optional stUsername As 
     Call main_load_frontend_field_properties
     
     Exit Sub
-error:
+ERROR:
     
 End Sub
+
+Public Function databaseAccess() As Boolean
+    On Error GoTo ERROR
+    Dim qdf As QueryDef
+    Dim Rs As Recordset
+    Set qdf = CurrentDb.QueryDefs("current_user")
+    Set Rs = qdf.OpenRecordset(dbOpenDynaset, dbSeeChanges)
+    databaseAccess = True
+    Exit Function
+ERROR:
+    databaseAccess = False
+End Function
 
 Public Sub updateConnectionDetails()
     Dim qdf As QueryDef
     Dim Db As Database
     Dim Rs As Recordset
+    
+    On Error GoTo ERROR
     
     Set Db = CurrentDb
     Set qdf = CurrentDb.QueryDefs("current_user")
@@ -144,6 +167,10 @@ Public Sub updateConnectionDetails()
     Rs.MoveFirst
     DbUser = Rs!Expr1000
 
+    Set Rs = CurrentDb.OpenRecordset("SELECT [User] FROM map_user where ActiveDirectoryUser = """ & DbUser & """", dbOpenDynaset, dbSeeChanges)
+    Rs.MoveFirst
+    DhaUser = Rs!User
+    
     Dim start, ende
     start = InStr(qdf.Connect, "SERVER=")
     ende = InStr(start + 7, qdf.Connect, ";")
@@ -159,6 +186,9 @@ Public Sub updateConnectionDetails()
     Else
         DbTrustedConnection = ""
     End If
+    Exit Sub
+ERROR:
+    MsgBox "Error establishing database access." & vbCrLf & "Check SQL Server login, local map_user table, and/or server availability" & vbCrLf & DbUser & " " & DhaUser & " " & DbServer & " " & DbInstance & " " & DbTrustedConnection
 End Sub
 
 Sub main_RelinkAllTablesHardCoded()
@@ -294,6 +324,5 @@ End Select
 queryDefType = s
 
 End Function
-
 
 
