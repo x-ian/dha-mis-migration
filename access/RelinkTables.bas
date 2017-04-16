@@ -8,7 +8,8 @@ Public DbInstance As String
 Public DbTrustedConnection As String
 
 Public Function runningOnAccessRuntime() As Boolean
-    runningOnAccessRuntime = SysCmd(acSysCmdRuntime)
+    'runningOnAccessRuntime = SysCmd(acSysCmdRuntime)
+    runningOnAccessRuntime = True
 End Function
 
 Public Function CurrentUser()

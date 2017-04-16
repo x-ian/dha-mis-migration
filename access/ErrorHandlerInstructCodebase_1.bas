@@ -4,17 +4,21 @@ Option Compare Database
 ' Microsoft Visual Basic for Applications Extensibility 5.3: https://msdn.microsoft.com/en-us/library/aa443970(v=vs.60).aspx
 
 Public BEGINNING_LINE_1 As String
+Public BEGINNING_LINE_2 As String
 Public ENDING_LINE_1a As String
 Public ENDING_LINE_1b As String
 Public ENDING_LINE_2 As String
 Public ENDING_LINE_3 As String
+Public ENDING_LINE_4 As String
 
 Sub setStrings()
-    BEGINNING_LINE_1 = "    If runningOnAccessRuntime Then On Error Goto ERROR_HANDLER_RUNTIME ' GENERATED ERROR HANDLER"
-    ENDING_LINE_1a = "    Exit Sub ' GENERATED ERROR HANDLER"
-    ENDING_LINE_1b = "    Exit Function ' GENERATED ERROR HANDLER"
-    ENDING_LINE_2 = "ERROR_HANDLER_RUNTIME: ' GENERATED ERROR HANDLER"
-    ENDING_LINE_3 = "     MsgBox ""Error happened: "" & Err.Description & "" "" & Err.Number ' GENERATED ERROR HANDLER"
+    BEGINNING_LINE_1 = "    ' GENERATED ERROR HANDLER"
+    BEGINNING_LINE_2 = "    If runningOnAccessRuntime Then On Error Goto ERROR_HANDLER_RUNTIME"
+    ENDING_LINE_1a = "    Exit Sub"
+    ENDING_LINE_1b = "    Exit Function"
+    ENDING_LINE_2 = "    ' GENERATED ERROR HANDLER"
+    ENDING_LINE_3 = "ERROR_HANDLER_RUNTIME:"
+    ENDING_LINE_4 = "    MsgBox ""Error happened"""
 End Sub
 
 Sub GenerateErrorHandlerCodeForActiveCodePane()
@@ -44,23 +48,25 @@ End Sub
 Private Sub RemoveErrorHandler(CodeMod As VBIDE.CodeModule)
     setStrings
     removeLine CodeMod, BEGINNING_LINE_1
+    removeLine CodeMod, BEGINNING_LINE_2
     removeLine CodeMod, ENDING_LINE_1a
     removeLine CodeMod, ENDING_LINE_1b
     removeLine CodeMod, ENDING_LINE_2
     removeLine CodeMod, ENDING_LINE_3
+    removeLine CodeMod, ENDING_LINE_4
 End Sub
 
 Private Sub AddErrorHandlerEnding(CodeMod As VBIDE.CodeModule)
     Dim c01 As String
     c01 = Replace(CodeMod.Lines(1, CodeMod.CountOfLines), _
         "End Sub", _
-        ENDING_LINE_1a & vbCrLf & ENDING_LINE_2 & vbCrLf & ENDING_LINE_3 & vbCrLf & "End Sub")
+        ENDING_LINE_1a & vbCrLf & ENDING_LINE_2 & vbCrLf & ENDING_LINE_3 & vbCrLf & ENDING_LINE_4 & vbCrLf & "End Sub")
     CodeMod.DeleteLines 1, CodeMod.CountOfLines
     CodeMod.AddFromString c01
     
     c01 = Replace(CodeMod.Lines(1, CodeMod.CountOfLines), _
         "End Function", _
-        ENDING_LINE_1b & vbCrLf & ENDING_LINE_2 & vbCrLf & ENDING_LINE_3 & vbCrLf & vbCrLf & "End Function")
+        ENDING_LINE_1b & vbCrLf & ENDING_LINE_2 & vbCrLf & ENDING_LINE_3 & vbCrLf & ENDING_LINE_4 & vbCrLf & "End Function")
     CodeMod.DeleteLines 1, CodeMod.CountOfLines
     CodeMod.AddFromString c01
     
@@ -110,6 +116,7 @@ Sub AddErrorHandlerBeginning(CodeMod As VBIDE.CodeModule)
         EndOfDeclaration = EndOfDeclarationLines(CodeMod, ProcName, ProcType)
         ProcLine = EndOfCommentOfProc(CodeMod, EndOfDeclaration + 1)
         CodeMod.InsertLines ProcLine + 1, BEGINNING_LINE_1
+        CodeMod.InsertLines ProcLine + 2, BEGINNING_LINE_2
         
         ' Skip StartLine to the next proc
         StartLine = ProcBodyLine + CodeMod.ProcCountLines(ProcName, ProcType) + 1
@@ -158,6 +165,4 @@ Function EndOfDeclarationLines(CodeMod As VBIDE.CodeModule, ProcName As String, 
 
     EndOfDeclarationLines = LineNum - 1 ' added - 1 compare to cpearson's code
 End Function
-
-
 
