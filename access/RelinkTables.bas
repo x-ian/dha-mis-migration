@@ -8,8 +8,8 @@ Public DbInstance As String
 Public DbTrustedConnection As String
 
 Public Function runningOnAccessRuntime() As Boolean
-    'runningOnAccessRuntime = SysCmd(acSysCmdRuntime)
-    runningOnAccessRuntime = True
+    runningOnAccessRuntime = SysCmd(acSysCmdRuntime)
+    'runningOnAccessRuntime = True
 End Function
 
 Public Function CurrentUser()
@@ -86,6 +86,13 @@ Sub main_RelinkAllTables(Server As String, Db As String, Optional stUsername As 
     Col.Add "supply_item"
     Col.Add "supply_item_set"
     Col.Add "tblOrgUnit"
+    
+    Col.Add "view_art_reg_cum_now"
+    Col.Add "view_art_reg_cum_now_calc"
+    Col.Add "view_art_reg_cum_now_valid_base"
+    Col.Add "view_art_reg_cum_outc_valid_base"
+    Col.Add "view_art_reg_cum_prev"
+    Col.Add "view_art_reg_quart_now"
 
     Dim name As Variant
     Dim available As Variant
@@ -325,5 +332,6 @@ End Select
 queryDefType = s
 
 End Function
+
 
 
