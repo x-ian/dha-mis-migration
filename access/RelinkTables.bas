@@ -7,6 +7,15 @@ Public DbServer As String
 Public DbInstance As String
 Public DbTrustedConnection As String
 
+Public Function IsLiveDatabase() As Boolean
+    Dim db As Database
+    Dim t As TableDef
+    
+    Set db = CurrentDb
+    Set t = db.TableDefs("obs")
+    IsLiveDatabase = InStr(t.Connect, "HIVData-live")
+End Function
+
 Public Function runningOnAccessRuntime() As Boolean
     runningOnAccessRuntime = SysCmd(acSysCmdRuntime)
     'runningOnAccessRuntime = True
@@ -32,7 +41,7 @@ Public Function CurrentDbTrustedConnection()
     CurrentDbTrustedConnection = DbTrustedConnection
 End Function
 
-Sub main_RelinkAllTables(Server As String, Db As String, Optional stUsername As String, Optional stPassword As String)
+Sub main_RelinkAllTables(Server As String, db As String, Optional stUsername As String, Optional stPassword As String)
     Dim Col As Collection
     Set Col = New Collection
     Col.Add "art_accom"
@@ -133,14 +142,14 @@ Sub main_RelinkAllTables(Server As String, Db As String, Optional stUsername As 
         If Err <> 3265 Then
             Call DeleteTable(localName)
         End If
-        If Not AttachDSNLessTable(localName, "dbo." & CStr(name), Server, Db, stUsername, stPassword) Then
+        If Not AttachDSNLessTable(localName, "dbo." & CStr(name), Server, db, stUsername, stPassword) Then
 '        Call AttachDSNLessTable(localName, "dbo." & CStr(name), "NDX-HAD1\DHA_MIS", "HIVData9", "sa", "dhamis@2016")
             MsgBox ("Error during (re-) linking. Wrong login details? Frontend not usuable; aborting")
             GoTo ERROR
         End If
     Next
     
-    Call changeOdbcSourceForSqlPassthroughQueries(Server, Db, stUsername, stPassword)
+    Call changeOdbcSourceForSqlPassthroughQueries(Server, db, stUsername, stPassword)
     
     Call updateConnectionDetails
     Call main_load_frontend_field_properties
@@ -164,12 +173,12 @@ End Function
 
 Public Sub updateConnectionDetails()
     Dim qdf As QueryDef
-    Dim Db As Database
+    Dim db As Database
     Dim Rs As Recordset
     
     On Error GoTo ERROR
     
-    Set Db = CurrentDb
+    Set db = CurrentDb
     Set qdf = CurrentDb.QueryDefs("current_user")
     Set Rs = qdf.OpenRecordset(dbOpenDynaset, dbSeeChanges)
     Rs.MoveFirst
@@ -190,7 +199,7 @@ Public Sub updateConnectionDetails()
     
     start = InStr(qdf.Connect, "Trusted_Connection=Yes")
     If start > 0 Then
-        DbTrustedConnection = "AD Login"
+        DbTrustedConnection = "Trusted Connection"
     Else
         DbTrustedConnection = ""
     End If
@@ -240,13 +249,13 @@ AttachDSNLessTable_Err:
 
 End Function
 
-Private Sub changeOdbcSourceForSqlPassthroughQueries(Server As String, Db As String, Optional stUsername As String, Optional stPassword As String)
+Private Sub changeOdbcSourceForSqlPassthroughQueries(Server As String, db As String, Optional stUsername As String, Optional stPassword As String)
 
     Dim obj As AccessObject
     Dim qdf As DAO.QueryDef
     Dim odbc As String
     
-    odbc = createOdbcConnectString(Server, Db, stUsername, stPassword)
+    odbc = createOdbcConnectString(Server, db, stUsername, stPassword)
     
     For Each obj In Application.CurrentData.AllQueries
         Set qdf = CurrentDb.QueryDefs(obj.name)
